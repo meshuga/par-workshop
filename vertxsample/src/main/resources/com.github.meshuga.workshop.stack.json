@@ -1,0 +1,10 @@
+{
+  "main": "com.github.meshuga.workshop.stack.StackVerticle",
+  "options": {
+    "worker": false,
+    "instances": 2,
+    "config": {
+      "host": "api.stackexchange.com"
+    }
+  }
+}
