@@ -1,15 +1,14 @@
 package com.github.meshuga.workshop;
 
 public class Question {
-    private String value;
+    private final String value;
+
+    public Question(String value) {
+        this.value = value;
+    }
 
     public String getValue() {
         return value;
-    }
-
-    public Question setValue(String value) {
-        this.value = value;
-        return this;
     }
 
     @Override

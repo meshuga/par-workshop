@@ -4,14 +4,12 @@ import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.util.Timeout;
-import scala.compat.java8.FutureConverters;
+import scala.concurrent.Await;
+import scala.concurrent.duration.Duration;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static akka.pattern.Patterns.ask;
@@ -24,10 +22,9 @@ public class Main {
 
         Timeout timeout = Timeout.apply(1, TimeUnit.DAYS);
         try (Stream<String> stream = Files.lines(Paths.get("questions.txt"))) {
-            List<CompletableFuture<Object>> questions = stream
-                    .map(q -> ask(problemsService, new Question().setValue(q), timeout))
-                    .map(f -> FutureConverters.toJava(f).toCompletableFuture())
-                    .collect(Collectors.toList());
+            stream.forEach(q -> ask(problemsService, new Question(q), timeout));
         }
+
+        Await.ready(system.whenTerminated(), Duration.Inf());
     }
 }
