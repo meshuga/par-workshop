@@ -4,21 +4,19 @@ import akka.actor.AbstractLoggingActor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 
-public class OmnipotentProblemSolver extends AbstractLoggingActor {
+public class OmnipotentSolver extends AbstractLoggingActor {
 
     private static final String blockedQuestion = "Why does time have a direction?";
-    private static final Start START = new Start();
+    /* package */ static final Start START = new Start();
 
     private final Question question;
-    private final ActorRef parent;
 
-    public OmnipotentProblemSolver(Question question, ActorRef parent) {
+    public OmnipotentSolver(Question question) {
         this.question = question;
-        this.parent = parent;
     }
 
-    public static Props props(Question question, ActorRef parent) {
-        return Props.create(OmnipotentProblemSolver.class, question, parent)
+    public static Props props(Question question) {
+        return Props.create(OmnipotentSolver.class, question)
                 .withDispatcher("solver-dispatcher");
     }
 
@@ -46,7 +44,7 @@ public class OmnipotentProblemSolver extends AbstractLoggingActor {
         }
         log().info("Starting to work on: {}", question.getValue());
         Thread.sleep(2_000);
-        parent.tell(new Result(question, "42"), self());
+        context().parent().tell(new Result(question, "42"), self());
     }
 
     private static class Start {

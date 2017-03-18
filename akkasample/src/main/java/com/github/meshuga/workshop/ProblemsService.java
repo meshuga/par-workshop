@@ -5,10 +5,21 @@ import scala.concurrent.duration.Duration;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 public class ProblemsService extends AbstractLoggingActor {
 
+    private final BiFunction<ActorRefFactory, Question, ActorRef> childActorFactory;
     private Map<Question, ActorRef> currentQuestions = new HashMap<>();
+
+    public static Props props(BiFunction<ActorRefFactory, Question, ActorRef> childActorFactory) {
+        return Props.create(ProblemsService.class, childActorFactory);
+    }
+
+    public ProblemsService(BiFunction<ActorRefFactory, Question, ActorRef> childActorFactory) {
+        this.childActorFactory = childActorFactory;
+    }
 
     @Override
     public SupervisorStrategy supervisorStrategy() {
@@ -19,7 +30,7 @@ public class ProblemsService extends AbstractLoggingActor {
     public Receive createReceive() {
         return receiveBuilder()
                 .match(Question.class, this::questionReceived)
-                .match(OmnipotentProblemSolver.Result.class, this::resultReceived)
+                .match(OmnipotentSolver.Result.class, this::resultReceived)
                 .match(Terminated.class, this::childTerminated)
                 .build();
     }
@@ -30,12 +41,12 @@ public class ProblemsService extends AbstractLoggingActor {
     }
 
     private void questionReceived(Question question) {
-        ActorRef worker = getContext().actorOf(OmnipotentProblemSolver.props(question, self()));
+        ActorRef worker = childActorFactory.apply(getContext(), question);
         context().watch(worker);
         currentQuestions.put(question, worker);
     }
 
-    private void resultReceived(OmnipotentProblemSolver.Result result) {
+    private void resultReceived(OmnipotentSolver.Result result) {
         currentQuestions.remove(result.getQuestion());
         log().info("Answer to '{}' is '{}'",
                 result.getQuestion().getValue(), result.getAnswer());
